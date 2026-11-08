@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Smart QR Payment</string>
+    <string name="nav_home">Tạo QR</string>
+    <string name="nav_history">Lịch sử</string>
+    <string name="nav_bank">Ngân hàng</string>
+    <string name="nav_settings">Cài đặt</string>
+    <string name="title_enter_amount">Số tiền cần nhận</string>
+    <string name="btn_generate_qr">TẠO MÃ QR THANH TOÁN</string>
+    <string name="btn_clear_amount">Xóa số tiền</string>
+    <string name="btn_save_qr">Lưu ảnh QR</string>
+    <string name="btn_share_qr">Chia sẻ QR</string>
+    <string name="btn_new_qr">Tạo mã mới</string>
+    <string name="btn_fullscreen_qr">Hiển thị nhanh toàn màn hình</string>
+    <string name="msg_saved_qr_success">Đã lưu ảnh mã QR vào thư viện ảnh!</string>
+    <string name="msg_invalid_amount">Vui lòng nhập số tiền hợp lệ (từ 1.000 VNĐ đến 499.999.999 VNĐ)</string>
+    <string name="msg_missing_bank_account">Vui lòng thiết lập tài khoản ngân hàng trước khi tạo mã QR</string>
+</resources>

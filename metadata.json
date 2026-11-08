@@ -1,0 +1,6 @@
+{
+  "name": "Smart QR Payment",
+  "description": "Ứng dụng tạo mã VietQR chuyển khoản ngân hàng nhanh chóng với số tiền chính xác, hoạt động độc lập và offline.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
