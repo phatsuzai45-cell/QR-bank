@@ -7,12 +7,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -22,16 +25,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,7 +46,6 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -57,11 +56,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -77,7 +78,7 @@ import com.example.data.QrPaymentRepository
 import com.example.data.UserPreferencesRepository
 import com.example.ui.AppScreen
 import com.example.ui.SmartQrViewModel
-import com.example.ui.components.VietQrVerifiedBadge
+import com.example.ui.components.SmartQrSplashScreen
 import com.example.ui.screens.AppSettingsScreen
 import com.example.ui.screens.BankSettingsScreen
 import com.example.ui.screens.HistoryScreen
@@ -85,6 +86,7 @@ import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.QrDisplayScreen
 import com.example.ui.theme.RoyalBluePrimary
 import com.example.ui.theme.SmartQrPaymentTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,7 +107,24 @@ class MainActivity : ComponentActivity() {
             val appSettings by viewModel.appSettingsState.collectAsStateWithLifecycle()
 
             SmartQrPaymentTheme(darkTheme = appSettings.darkThemeEnabled) {
-                SmartQrPaymentApp(viewModel = viewModel)
+                var showSplash by rememberSaveable { mutableStateOf(true) }
+
+                LaunchedEffect(Unit) {
+                    delay(650L)
+                    showSplash = false
+                }
+
+                Box(modifier = Modifier.fillMaxSize()) {
+                    SmartQrPaymentApp(viewModel = viewModel)
+
+                    AnimatedVisibility(
+                        visible = showSplash,
+                        enter = fadeIn(tween(150)),
+                        exit = fadeOut(tween(320))
+                    ) {
+                        SmartQrSplashScreen()
+                    }
+                }
             }
         }
     }
@@ -119,7 +138,6 @@ private data class BottomNavDestination(
     val testTag: String
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SmartQrPaymentApp(
     viewModel: SmartQrViewModel
@@ -179,14 +197,6 @@ fun SmartQrPaymentApp(
         )
     }
 
-    val subScreenTitle = when (uiState.currentScreen) {
-        AppScreen.HOME -> null // Trang chủ tự hiển thị Compact Header tích hợp
-        AppScreen.QR_DISPLAY -> "Mã QR Thanh Toán"
-        AppScreen.BANK_SETTINGS -> "Cài Đặt Ngân Hàng"
-        AppScreen.HISTORY -> "Lịch Sử Mã QR"
-        AppScreen.APP_SETTINGS -> "Cài Đặt & Giới Thiệu"
-    }
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -196,37 +206,8 @@ fun SmartQrPaymentApp(
                 hostState = snackbarHostState,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(bottom = 80.dp)
+                    .padding(bottom = 84.dp)
             )
-        },
-        topBar = {
-            AnimatedVisibility(visible = subScreenTitle != null) {
-                subScreenTitle?.let { title ->
-                    Surface(
-                        color = MaterialTheme.colorScheme.background,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .windowInsetsPadding(WindowInsets.statusBars)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.ExtraBold
-                                ),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            VietQrVerifiedBadge(text = "VietQR")
-                        }
-                    }
-                }
-            }
         }
     ) { innerPadding ->
         Box(
@@ -234,13 +215,38 @@ fun SmartQrPaymentApp(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Smooth Page Transition Animation between tabs
+            // PAGE TRANSITIONS: Slide + Fade khi mở màn hình QR, Cross-fade mượt giữa các tab khác
             AnimatedContent(
                 targetState = uiState.currentScreen,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(200)) togetherWith fadeOut(animationSpec = tween(160))
+                    when {
+                        targetState == AppScreen.QR_DISPLAY -> {
+                            (slideInHorizontally(
+                                animationSpec = tween(260, easing = FastOutSlowInEasing),
+                                initialOffsetX = { fullWidth -> fullWidth / 3 }
+                            ) + fadeIn(tween(220))) togetherWith
+                                (slideOutHorizontally(
+                                    animationSpec = tween(220, easing = FastOutSlowInEasing),
+                                    targetOffsetX = { fullWidth -> -fullWidth / 5 }
+                                ) + fadeOut(tween(160)))
+                        }
+                        initialState == AppScreen.QR_DISPLAY -> {
+                            (slideInHorizontally(
+                                animationSpec = tween(240, easing = FastOutSlowInEasing),
+                                initialOffsetX = { fullWidth -> -fullWidth / 4 }
+                            ) + fadeIn(tween(200))) togetherWith
+                                (slideOutHorizontally(
+                                    animationSpec = tween(220, easing = FastOutSlowInEasing),
+                                    targetOffsetX = { fullWidth -> fullWidth / 3 }
+                                ) + fadeOut(tween(160)))
+                        }
+                        else -> {
+                            fadeIn(animationSpec = tween(200)) togetherWith
+                                fadeOut(animationSpec = tween(150))
+                        }
+                    }
                 },
-                label = "screen_transition"
+                label = "ultra_screen_transition"
             ) { screen ->
                 when (screen) {
                     AppScreen.HOME -> {
@@ -248,6 +254,7 @@ fun SmartQrPaymentApp(
                             uiState = uiState,
                             bankAccount = bankAccount,
                             hapticEnabled = appSettings.hapticFeedbackEnabled,
+                            darkTheme = appSettings.darkThemeEnabled,
                             onAmountTextChanged = viewModel::onAmountTextInputChanged,
                             onKeypadDigit = viewModel::onKeypadAppendDigits,
                             onKeypadBackspace = viewModel::onKeypadBackspace,
@@ -265,6 +272,7 @@ fun SmartQrPaymentApp(
                         QrDisplayScreen(
                             session = uiState.activeQrSession,
                             keepScreenOn = appSettings.keepScreenOnDuringQr,
+                            darkTheme = appSettings.darkThemeEnabled,
                             isFullscreenOpen = uiState.isFullscreenQrOpen,
                             screenBrightness = uiState.screenBrightness,
                             isSavingOrSharing = uiState.isSavingOrSharing,
@@ -283,6 +291,7 @@ fun SmartQrPaymentApp(
                     AppScreen.BANK_SETTINGS -> {
                         BankSettingsScreen(
                             currentConfig = bankAccount,
+                            darkTheme = appSettings.darkThemeEnabled,
                             onSaveBankConfig = viewModel::saveBankAccount,
                             onNavigateBackHome = { viewModel.navigateTo(AppScreen.HOME) }
                         )
@@ -291,6 +300,7 @@ fun SmartQrPaymentApp(
                     AppScreen.HISTORY -> {
                         HistoryScreen(
                             historyItems = historyItems,
+                            darkTheme = appSettings.darkThemeEnabled,
                             onOpenHistoryQr = viewModel::openHistoryItem,
                             onDeleteItem = viewModel::deleteHistoryItem,
                             onClearAllHistory = viewModel::clearAllHistory,
@@ -307,13 +317,14 @@ fun SmartQrPaymentApp(
                             onToggleHapticFeedback = { viewModel.updateAppSettings(hapticFeedback = it) },
                             onToggleAutoSaveHistory = { viewModel.updateAppSettings(autoSaveHistory = it) },
                             onToggleDarkTheme = { viewModel.updateAppSettings(darkTheme = it) },
+                            onNavigateToBankSettings = { viewModel.navigateTo(AppScreen.BANK_SETTINGS) },
                             onNavigateBackHome = { viewModel.navigateTo(AppScreen.HOME) }
                         )
                     }
                 }
             }
 
-            // FLOATING BOTTOM NAVIGATION BAR (Có khoảng cách an toàn với thanh điều hướng Android)
+            // FLOATING BOTTOM NAVIGATION BAR (Có khoảng cách an toàn với thanh điều hướng hệ thống Android)
             FloatingFintechBottomBar(
                 items = navItems,
                 currentScreen = uiState.currentScreen,
@@ -340,9 +351,9 @@ private fun FloatingFintechBottomBar(
     ) {
         Surface(
             shape = RoundedCornerShape(26.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.8f)),
-            shadowElevation = 14.dp,
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.85f)),
+            shadowElevation = 16.dp,
             modifier = Modifier
                 .widthIn(max = 560.dp)
                 .fillMaxWidth()
@@ -356,17 +367,17 @@ private fun FloatingFintechBottomBar(
             ) {
                 items.forEach { item ->
                     val selected = currentScreen == item.screen
-                    val scale by animateFloatAsState(
-                        targetValue = if (selected) 1.04f else 1f,
+                    val iconScale by animateFloatAsState(
+                        targetValue = if (selected) 1.12f else 1f,
                         animationSpec = spring(
                             dampingRatio = Spring.DampingRatioMediumBouncy,
                             stiffness = Spring.StiffnessMedium
                         ),
-                        label = "tab_scale"
+                        label = "tab_icon_scale"
                     )
                     val pillColor by animateColorAsState(
                         targetValue = if (selected) {
-                            RoyalBluePrimary.copy(alpha = 0.14f)
+                            RoyalBluePrimary.copy(alpha = 0.13f)
                         } else {
                             Color.Transparent
                         },
@@ -386,10 +397,6 @@ private fun FloatingFintechBottomBar(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .graphicsLayer {
-                                scaleX = scale
-                                scaleY = scale
-                            }
                             .clip(RoundedCornerShape(20.dp))
                             .background(pillColor)
                             .clickable(
@@ -409,7 +416,12 @@ private fun FloatingFintechBottomBar(
                                 imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
                                 contentDescription = item.label,
                                 tint = contentColor,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .graphicsLayer {
+                                        scaleX = iconScale
+                                        scaleY = iconScale
+                                    }
                             )
                             Text(
                                 text = item.label,

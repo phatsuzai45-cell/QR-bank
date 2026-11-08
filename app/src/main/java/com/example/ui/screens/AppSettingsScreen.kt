@@ -3,6 +3,7 @@ package com.example.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,27 +11,27 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Android
-import androidx.compose.material.icons.filled.BrightnessHigh
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.ScreenLockPortrait
-import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Android
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Fullscreen
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Paid
+import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.ScreenLockPortrait
+import androidx.compose.material.icons.outlined.Verified
+import androidx.compose.material.icons.outlined.VolumeUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -40,24 +41,37 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.data.AppSettingsConfig
 import com.example.data.BankAccountConfig
+import com.example.domain.CurrencyUtils
 import com.example.domain.VietQrGenerator
 import com.example.domain.VietQrValidationResult
-import com.example.ui.components.VietQrVerifiedBadge
+import com.example.domain.VietnameseBanks
+import com.example.ui.components.BankLogoBadge
+import com.example.ui.components.PhatPayVectorLogo
+import com.example.ui.components.UltraFintechBackdrop
 import com.example.ui.components.pressScaleEffect
+import com.example.ui.components.staggeredEntrance
 import com.example.ui.theme.JetBrainsMonoFontFamily
-import com.example.ui.theme.RoyalBlueDark
 import com.example.ui.theme.RoyalBluePrimary
 import com.example.ui.theme.SecondaryBlue
 import com.example.ui.theme.SuccessEmerald
@@ -71,11 +85,19 @@ fun AppSettingsScreen(
     onToggleHapticFeedback: (Boolean) -> Unit,
     onToggleAutoSaveHistory: (Boolean) -> Unit,
     onToggleDarkTheme: (Boolean) -> Unit,
+    onNavigateToBankSettings: () -> Unit = {},
     onNavigateBackHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     BackHandler {
         onNavigateBackHome()
+    }
+
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var showFavoriteDenominationsDialog by remember { mutableStateOf(false) }
+
+    val matchedBank = remember(bankAccount.bankBin) {
+        VietnameseBanks.findByBin(bankAccount.bankBin)
     }
 
     val sampleDiagnostic = remember(bankAccount) {
@@ -87,410 +109,580 @@ fun AppSettingsScreen(
         )
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.TopCenter
+    UltraFintechBackdrop(
+        headerHeightDp = 180.dp,
+        darkTheme = settings.darkThemeEnabled
     ) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 600.dp)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(top = 8.dp, bottom = 104.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
-            // 1. CHẾ ĐỘ GIAO DIỆN (LIGHT MODE / DARK MODE SELECTOR CARD)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 10.dp, bottom = 108.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Column(
+                // 1. TOP HEADER BAR TRÊN NỀN SÓNG XANH
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .staggeredEntrance(0),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Giao diện ứng dụng (Theme Mode)",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        )
+                        text = "Cài đặt",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold
+                        ),
+                        color = Color.White
                     )
+                }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        ThemeModeSelectorButton(
-                            title = "Light Mode",
-                            subtitle = "Xanh Royal & Trắng",
-                            icon = Icons.Default.LightMode,
-                            selected = !settings.darkThemeEnabled,
-                            onClick = { onToggleDarkTheme(false) },
-                            modifier = Modifier.weight(1f)
+                // 2. THẺ THÔNG TIN ỨNG DỤNG: Smart QR Payment • Phiên bản 1.0.0 >
+                Card(
+                    onClick = { showAboutDialog = true },
+                    modifier = Modifier
+                        .pressScaleEffect(0.985f)
+                        .fillMaxWidth()
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = RoundedCornerShape(22.dp),
+                            ambientColor = RoyalBluePrimary.copy(alpha = 0.16f),
+                            spotColor = RoyalBluePrimary.copy(alpha = 0.16f)
                         )
+                        .staggeredEntrance(1),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            PhatPayVectorLogo(
+                                size = 50.dp,
+                                isDarkBackground = true,
+                                showRoundedBox = true
+                            )
 
-                        ThemeModeSelectorButton(
-                            title = "Dark Mode",
-                            subtitle = "Navy Đậm Cao Cấp",
-                            icon = Icons.Default.DarkMode,
-                            selected = settings.darkThemeEnabled,
-                            onClick = { onToggleDarkTheme(true) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("switch_dark_theme")
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = "PHATPAY",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontStyle = FontStyle.Italic,
+                                        letterSpacing = 0.6.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Phiên bản 1.0.0 • Tạo QR nhanh – Thu tiền dễ dàng",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = "Giới thiệu ứng dụng",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
-            }
 
-            // 2. CÀI ĐẶT HIỂN THỊ & TRẢI NGHIỆM
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
+                // 3. MỤC TÀI KHOẢN NGÂN HÀNG + NÚT CHỈNH SỬA (Giống hệt thiết kế mẫu)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Text(
-                        text = "Tùy chỉnh hiển thị & thao tác",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-
-                    SettingToggleRow(
-                        icon = Icons.Default.ScreenLockPortrait,
-                        title = "Giữ màn hình luôn sáng khi mở QR",
-                        subtitle = "Ngăn điện thoại tự tắt màn hình khi khách đang quét mã",
-                        checked = settings.keepScreenOnDuringQr,
-                        onCheckedChange = onToggleKeepScreenOn,
-                        testTag = "switch_keep_screen_on"
-                    )
-
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-
-                    SettingToggleRow(
-                        icon = Icons.Default.BrightnessHigh,
-                        title = "Tự động tăng tối đa độ sáng (100%)",
-                        subtitle = "Tối ưu độ tương phản khi mở Chế độ hiển thị nhanh toàn màn hình",
-                        checked = settings.autoMaxBrightnessInFullscreen,
-                        onCheckedChange = onToggleAutoMaxBrightness,
-                        testTag = "switch_auto_brightness"
-                    )
-
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-
-                    SettingToggleRow(
-                        icon = Icons.Default.Vibration,
-                        title = "Rung phản hồi bàn phím số",
-                        subtitle = "Phản hồi xúc giác nhẹ khi bấm chọn số tiền bằng một tay",
-                        checked = settings.hapticFeedbackEnabled,
-                        onCheckedChange = onToggleHapticFeedback,
-                        testTag = "switch_haptic"
-                    )
-
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-
-                    SettingToggleRow(
-                        icon = Icons.Default.History,
-                        title = "Tự động lưu lịch sử mã QR",
-                        subtitle = "Lưu các mã QR đã tạo vào Room Database trên thiết bị",
-                        checked = settings.autoSaveQrHistory,
-                        onCheckedChange = onToggleAutoSaveHistory,
-                        testTag = "switch_auto_history"
-                    )
-                }
-            }
-
-            // 3. KIỂM ĐỊNH CHUẨN KỸ THUẬT VIETQR / NAPAS 247
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, SuccessEmerald.copy(alpha = 0.4f))
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .staggeredEntrance(2),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Verified,
-                            contentDescription = null,
-                            tint = SuccessEmerald,
-                            modifier = Modifier.size(26.dp)
+                        Text(
+                            text = "Tài khoản ngân hàng",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.onBackground
                         )
-                        Column {
-                            Text(
-                                text = "Chuẩn kỹ thuật VietQR / NAPAS 247",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
+                        Text(
+                            text = "Chỉnh sửa",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = RoyalBluePrimary,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onNavigateToBankSettings() }
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+
+                    Card(
+                        onClick = onNavigateToBankSettings,
+                        modifier = Modifier
+                            .pressScaleEffect(0.985f)
+                            .fillMaxWidth()
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(20.dp),
+                                ambientColor = RoyalBluePrimary.copy(alpha = 0.12f),
+                                spotColor = RoyalBluePrimary.copy(alpha = 0.12f)
+                            ),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                BankLogoBadge(
+                                    bankShortName = bankAccount.bankShortName,
+                                    brandColorHex = matchedBank?.brandColorHex ?: 0xFF00A86B,
+                                    size = 44.dp
                                 )
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        text = bankAccount.bankShortName,
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = FontWeight.ExtraBold
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "${bankAccount.accountNumber} - ${bankAccount.accountHolder}",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            fontFamily = JetBrainsMonoFontFamily,
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = "Chỉnh sửa ngân hàng",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // 4. NHÓM CÀI ĐẶT THU TIỀN & TƯƠNG TÁC (Giống bố cục màn hình Cài đặt mẫu)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .staggeredEntrance(3),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        // Mệnh giá yêu thích
+                        SettingsNavigationRow(
+                            icon = Icons.Outlined.Paid,
+                            iconTint = RoyalBluePrimary,
+                            title = "Mệnh giá yêu thích",
+                            trailingValue = "10K - 500K",
+                            onClick = { showFavoriteDenominationsDialog = true }
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+
+                        // Chế độ thu tiền toàn màn hình
+                        SettingsSwitchRow(
+                            icon = Icons.Outlined.Fullscreen,
+                            iconTint = RoyalBluePrimary,
+                            title = "Chế độ thu tiền toàn màn hình",
+                            subtitle = "Tự động đẩy sáng 100% khi phóng to QR",
+                            checked = settings.autoMaxBrightnessInFullscreen,
+                            onCheckedChange = onToggleAutoMaxBrightness,
+                            testTag = "switch_auto_brightness"
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+
+                        // Giữ màn hình luôn sáng
+                        SettingsSwitchRow(
+                            icon = Icons.Outlined.ScreenLockPortrait,
+                            iconTint = RoyalBluePrimary,
+                            title = "Giữ màn hình luôn sáng khi mở QR",
+                            subtitle = "Ngăn điện thoại tự tắt khi khách đang quét",
+                            checked = settings.keepScreenOnDuringQr,
+                            onCheckedChange = onToggleKeepScreenOn,
+                            testTag = "switch_keep_screen_on"
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+
+                        // Tự động lưu lịch sử giao dịch QR
+                        SettingsSwitchRow(
+                            icon = Icons.Outlined.History,
+                            iconTint = RoyalBluePrimary,
+                            title = "Tự động lưu lịch sử tạo QR",
+                            subtitle = "Lưu vào Room Database để thống kê thu tiền",
+                            checked = settings.autoSaveQrHistory,
+                            onCheckedChange = onToggleAutoSaveHistory,
+                            testTag = "switch_auto_history"
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+
+                        // Rung khi tạo QR & bấm phím
+                        SettingsSwitchRow(
+                            icon = Icons.Outlined.VolumeUp,
+                            iconTint = RoyalBluePrimary,
+                            title = "Rung phản hồi khi tạo QR",
+                            subtitle = "Phản hồi xúc giác nhẹ khi bấm phím số",
+                            checked = settings.hapticFeedbackEnabled,
+                            onCheckedChange = onToggleHapticFeedback,
+                            testTag = "switch_haptic"
+                        )
+                    }
+                }
+
+                // 5. NHÓM GIAO DIỆN, NGÔN NGỮ & CHẾ ĐỘ TỐI (DARK MODE)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .staggeredEntrance(4),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        SettingsNavigationRow(
+                            icon = Icons.Outlined.LightMode,
+                            iconTint = Color(0xFFF59E0B),
+                            title = "Giao diện",
+                            trailingValue = if (settings.darkThemeEnabled) "Tối (Navy)" else "Sáng",
+                            onClick = { onToggleDarkTheme(!settings.darkThemeEnabled) }
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+
+                        SettingsNavigationRow(
+                            icon = Icons.Outlined.Language,
+                            iconTint = Color(0xFFEF4444),
+                            title = "Ngôn ngữ",
+                            trailingValue = "Tiếng Việt",
+                            onClick = {}
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+
+                        SettingsSwitchRow(
+                            icon = Icons.Outlined.DarkMode,
+                            iconTint = Color(0xFF475569),
+                            title = "Chế độ tối (Dark Mode)",
+                            subtitle = "Nền xanh đen & thẻ Navy cao cấp",
+                            checked = settings.darkThemeEnabled,
+                            onCheckedChange = onToggleDarkTheme,
+                            testTag = "switch_dark_theme"
+                        )
+                    }
+                }
+
+                // 6. KIỂM ĐỊNH CHUẨN VIETQR EMVCo & HƯỚNG DẪN CÀI ĐẶT APK
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .staggeredEntrance(5),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, SuccessEmerald.copy(alpha = 0.35f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Verified,
+                                contentDescription = null,
+                                tint = SuccessEmerald,
+                                modifier = Modifier.size(22.dp)
                             )
                             Text(
-                                text = "Hoạt động 100% Offline • EMVCo CRC-16/CCITT-FALSE",
-                                style = MaterialTheme.typography.bodySmall.copy(
+                                text = "Chuẩn EMVCo VietQR • Hoạt động 100% Offline",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        if (sampleDiagnostic is VietQrValidationResult.Valid) {
+                            Text(
+                                text = "AID: A000000727 • QRIBFTTA • BIN: ${bankAccount.bankBin} • CRC16: ${sampleDiagnostic.crcHex}",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontFamily = JetBrainsMonoFontFamily,
                                     fontWeight = FontWeight.SemiBold
                                 ),
                                 color = SuccessEmerald
                             )
                         }
-                    }
 
-                    if (sampleDiagnostic is VietQrValidationResult.Valid) {
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    text = "Kiểm tra tự động mẫu 150.000 VNĐ (${bankAccount.bankShortName}):",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                                Text(
-                                    text = sampleDiagnostic.payload,
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        fontFamily = JetBrainsMonoFontFamily
-                                    ),
-                                    color = RoyalBluePrimary
-                                )
-                                Text(
-                                    text = "• AID: A000000727 • Service: QRIBFTTA • Currency: 704 • CRC16: ${sampleDiagnostic.crcHex}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
 
-            // 4. MÀN HÌNH PHỤ: GIỚI THIỆU ỨNG DỤNG (ABOUT SMART QR PAYMENT)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(RoyalBlueDark, RoyalBluePrimary, SecondaryBlue)
-                            )
-                        )
-                        .padding(18.dp)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = Color.White.copy(alpha = 0.2f),
-                                modifier = Modifier.size(44.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.QrCodeScanner,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Smart QR Payment",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.ExtraBold
-                                        ),
-                                        color = Color.White
-                                    )
-                                    VietQrVerifiedBadge(
-                                        text = "v2.0 Fintech Edition",
-                                        isLightOnBlue = true
-                                    )
-                                }
-                                Text(
-                                    text = "Giải pháp tạo mã QR chuyển khoản chính xác cho cửa hàng & cá nhân",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.85f)
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.Android,
+                                contentDescription = null,
+                                tint = RoyalBluePrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "Xuất & Cài đặt APK: Chọn Settings/Export -> Download APK hoặc chạy ./gradlew assembleDebug.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-
-                        Text(
-                            text = "Ứng dụng tạo mã VietQR chuẩn EMVCo/NAPAS 247 độc lập, hoạt động 100% offline không cần đăng nhập tài khoản hay máy chủ trung gian. Tương thích với tất cả ứng dụng ngân hàng tại Việt Nam.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.92f)
-                        )
                     }
                 }
             }
+        }
+    }
 
-            // 5. HƯỚNG DẪN TẢI & CÀI ĐẶT FILE APK
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+    if (showAboutDialog) {
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            title = {
+                Text(
+                    text = "PHATPAY v1.0.0",
+                    fontWeight = FontWeight.ExtraBold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Android,
-                            contentDescription = null,
-                            tint = RoyalBluePrimary,
-                            modifier = Modifier.size(24.dp)
+                        PhatPayVectorLogo(
+                            size = 54.dp,
+                            isDarkBackground = true,
+                            showRoundedBox = true
                         )
-                        Text(
-                            text = "Hướng dẫn xuất & cài đặt file APK",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
+                        PhatPayVectorLogo(
+                            size = 54.dp,
+                            isDarkBackground = false,
+                            showRoundedBox = true
+                        )
+                        Column {
+                            Text(
+                                text = "Logo Sáng & Tối",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
                             )
-                        )
+                            Text(
+                                text = "Tạo QR nhanh – Thu tiền dễ dàng",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     Text(
-                        text = "• Từ Google AI Studio: Nhấn biểu tượng Settings / Export ở góc trên -> Chọn \"Download APK\".\n" +
-                            "• Từ Android Studio / Terminal: Chạy lệnh ./gradlew assembleDebug -> Nhận file tại app/build/outputs/apk/debug/app-debug.apk.\n" +
-                            "• Cài đặt trên điện thoại: Mở file APK vừa tải -> Cho phép cài đặt từ nguồn này -> Nhấn Cài đặt.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "Ứng dụng PHATPAY chuyên tạo mã QR chuyển khoản ngân hàng chuẩn VietQR / NAPAS 247 với số tiền chính xác.\n\n" +
+                            "• Phong cách: Futuristic Neon Blue\n" +
+                            "• Hoạt động độc lập 100% Offline\n" +
+                            "• Lưu trữ an toàn bằng Jetpack DataStore & Room Database"
                     )
                 }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAboutDialog = false }) {
+                    Text("Đóng", fontWeight = FontWeight.Bold)
+                }
             }
-        }
+        )
+    }
+
+    if (showFavoriteDenominationsDialog) {
+        AlertDialog(
+            onDismissRequest = { showFavoriteDenominationsDialog = false },
+            title = {
+                Text(
+                    text = "Mệnh giá chọn nhanh",
+                    fontWeight = FontWeight.ExtraBold
+                )
+            },
+            text = {
+                Text(
+                    "Các nút mệnh giá nhanh trên Trang chủ đã được tối ưu sẵn cho thanh toán tại Việt Nam:\n\n" +
+                        CurrencyUtils.defaultQuickAmounts.joinToString("  •  ") {
+                            CurrencyUtils.formatShortDong(it)
+                        } +
+                        "\n\nBạn có thể chuyển đổi linh hoạt giữa chế độ \"Chọn mức\" và \"Cộng dồn (+)\" ngay trên màn hình Tạo QR."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showFavoriteDenominationsDialog = false }) {
+                    Text("Đã hiểu", fontWeight = FontWeight.Bold)
+                }
+            }
+        )
     }
 }
 
 @Composable
-private fun ThemeModeSelectorButton(
-    title: String,
-    subtitle: String,
+private fun SettingsNavigationRow(
     icon: ImageVector,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = if (selected) {
-            RoyalBluePrimary.copy(alpha = 0.12f)
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-        },
-        border = BorderStroke(
-            width = if (selected) 1.5.dp else 1.dp,
-            color = if (selected) RoyalBluePrimary else MaterialTheme.colorScheme.outline
-        ),
-        modifier = modifier.pressScaleEffect(0.96f)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (selected) RoyalBluePrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(22.dp)
-            )
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = if (selected) RoyalBluePrimary else MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SettingToggleRow(
-    icon: ImageVector,
+    iconTint: Color,
     title: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    testTag: String
+    trailingValue: String,
+    onClick: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(38.dp)
+                shape = RoundedCornerShape(11.dp),
+                color = iconTint.copy(alpha = 0.12f),
+                modifier = Modifier.size(36.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = RoyalBluePrimary,
+                        tint = iconTint,
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (trailingValue.isNotEmpty()) {
+                Text(
+                    text = trailingValue,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsSwitchRow(
+    icon: ImageVector,
+    iconTint: Color,
+    title: String,
+    subtitle: String? = null,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    testTag: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 10.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(11.dp),
+                color = iconTint.copy(alpha = 0.12f),
+                modifier = Modifier.size(36.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Column {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall.copy(
@@ -498,11 +690,13 @@ private fun SettingToggleRow(
                     ),
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (!subtitle.isNullOrBlank()) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 

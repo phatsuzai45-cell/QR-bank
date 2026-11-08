@@ -70,22 +70,22 @@ object QrImageExporter {
         }
         canvas.drawRoundRect(cardRect, 48f, 48f, cardPaint)
 
-        // 3. Header VietQR / NAPAS 247
+        // 3. Header PHATPAY • VIETQR / NAPAS 247
         val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.parseColor("#0A3D91")
-            textSize = 44f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textSize = 46f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC)
             textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("SMART QR PAYMENT • VIETQR", width / 2f, 165f, titlePaint)
+        canvas.drawText("PHATPAY • VIETQR", width / 2f, 162f, titlePaint)
 
         val subHeaderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#00A86B")
+            color = Color.parseColor("#12B981")
             textSize = 26f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("CHUẨN CHUYỂN NHANH NAPAS 247", width / 2f, 210f, subHeaderPaint)
+        canvas.drawText("TẠO QR NHANH – THU TIỀN DỄ DÀNG • NAPAS 247", width / 2f, 206f, subHeaderPaint)
 
         // 4. Số tiền thật lớn ở trên QR
         val amountLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

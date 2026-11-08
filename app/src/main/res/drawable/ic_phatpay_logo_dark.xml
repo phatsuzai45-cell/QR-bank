@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Orbital Neon Blue Ring Back Arc -->
+    <path
+        android:pathData="M18,68 C10,52 28,30 58,24 C84,19 98,28 92,44"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="16"
+                android:startY="68"
+                android:endX="94"
+                android:endY="28"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#0000E5FF" />
+                <item android:offset="0.5" android:color="#FF00E5FF" />
+                <item android:offset="1.0" android:color="#FF1769FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Golden Crown perched above the P -->
+    <path
+        android:pathData="M33,31 L30,20 L39,25 L45,16 L51,25 L60,20 L57,31 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="30"
+                android:startY="16"
+                android:endX="58"
+                android:endY="31"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFE57F" />
+                <item android:offset="0.5" android:color="#FFFFC107" />
+                <item android:offset="1.0" android:color="#FFFF8F00" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Crown Jewels -->
+    <path
+        android:fillColor="#FFFFF8E1"
+        android:pathData="M30,18.5a1.6,1.6 0,1 0,3.2 0a1.6,1.6 0,1 0,-3.2 0zM43.4,14.5a1.8,1.8 0,1 0,3.6 0a1.8,1.8 0,1 0,-3.6 0zM58.4,18.5a1.6,1.6 0,1 0,3.2 0a1.6,1.6 0,1 0,-3.2 0z" />
+
+    <!-- Stylized Futuristic Italic 'P' Silhouette -->
+    <path
+        android:fillType="evenOdd"
+        android:pathData="M36,34 L64,34 C76,34 83,41 81,52 C79,63 70,69 56,69 L45,69 L40,89 L25,89 L36,34 Z M48,46 L46,57 L56,57 C62,57 66,54 67,51 C68,48 65,46 59,46 L48,46 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="36"
+                android:startY="34"
+                android:endX="65"
+                android:endY="89"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFFFF" />
+                <item android:offset="0.65" android:color="#FFE0F2FE" />
+                <item android:offset="1.0" android:color="#FF60A5FA" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- QR Code Matrix Emblem Integrated at Bottom-Right of P -->
+    <!-- Top-Left Finder of Mini QR -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M53,73 h8 v8 h-8 z M55,75 v4 h4 v-4 z" />
+    <!-- Top-Right Finder of Mini QR -->
+    <path
+        android:fillColor="#FF00E5FF"
+        android:fillType="evenOdd"
+        android:pathData="M67,73 h8 v8 h-8 z M69,75 v4 h4 v-4 z" />
+    <!-- Bottom-Left Finder of Mini QR -->
+    <path
+        android:fillColor="#FF00E5FF"
+        android:fillType="evenOdd"
+        android:pathData="M53,83 h8 v8 h-8 z M55,85 v4 h4 v-4 z" />
+    <!-- QR Data Modules -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M63,73 h2.5 v2.5 h-2.5 z M63,77.5 h2.5 v3.5 h-2.5 z M63,83 h3 v3 h-3 z M68,83 h3 v3 h-3 z M72,83 h3 v3 h-3 z M67,87.5 h4 v3.5 h-4 z M72.5,87.5 h2.5 v3.5 h-2.5 z" />
+
+    <!-- Orbital Neon Front Swoosh -->
+    <path
+        android:pathData="M15,64 C20,76 48,74 78,56 C90,49 95,41 92,36"
+        android:strokeWidth="2.4"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="15"
+                android:startY="64"
+                android:endX="92"
+                android:endY="36"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF00E5FF" />
+                <item android:offset="0.6" android:color="#FF38BDF8" />
+                <item android:offset="1.0" android:color="#001769FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

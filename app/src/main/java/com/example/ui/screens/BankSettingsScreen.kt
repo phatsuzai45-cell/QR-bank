@@ -23,14 +23,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Save
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,17 +70,18 @@ import com.example.domain.VietnameseBank
 import com.example.domain.VietnameseBanks
 import com.example.ui.components.BankLogoBadge
 import com.example.ui.components.GradientPrimaryButton
+import com.example.ui.components.UltraFintechBackdrop
 import com.example.ui.components.VietQrVerifiedBadge
 import com.example.ui.components.pressScaleEffect
+import com.example.ui.components.staggeredEntrance
 import com.example.ui.theme.JetBrainsMonoFontFamily
-import com.example.ui.theme.RoyalBlueDark
 import com.example.ui.theme.RoyalBluePrimary
-import com.example.ui.theme.SecondaryBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BankSettingsScreen(
     currentConfig: BankAccountConfig,
+    darkTheme: Boolean = false,
     onSaveBankConfig: (bankBin: String, accountNumber: String, accountHolder: String, defaultMessage: String) -> Unit,
     onNavigateBackHome: () -> Unit,
     modifier: Modifier = Modifier
@@ -108,256 +111,317 @@ fun BankSettingsScreen(
         VietnameseBanks.findByBin(selectedBankBin) ?: VietnameseBanks.supportedBanks.first()
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .imePadding(),
-        contentAlignment = Alignment.TopCenter
+    UltraFintechBackdrop(
+        headerHeightDp = 195.dp,
+        darkTheme = darkTheme
     ) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 600.dp)
+        Box(
+            modifier = modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(top = 8.dp, bottom = 104.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .imePadding(),
+            contentAlignment = Alignment.TopCenter
         ) {
-            // 1. Thẻ Ngân hàng trực quan cao cấp
-            BankVirtualFintechCard(
-                bank = selectedBank,
-                accountNumber = accountNumber.ifBlank { "CHƯA NHẬP SỐ TK" },
-                accountHolder = CurrencyUtils.normalizeAccountHolderName(accountHolder).ifBlank { "TEN CHU TAI KHOAN" },
-                defaultMessage = CurrencyUtils.sanitizeTransferMessage(defaultMessage)
-            )
-
-            // 2. Form Cài đặt tài khoản thụ hưởng
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 10.dp, bottom = 108.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Column(
+                // 1. TOP HEADER BAR TRÊN NỀN SÓNG XANH
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                        .staggeredEntrance(0),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Thiết lập tài khoản thụ hưởng",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    // Chọn ngân hàng
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = "Ngân hàng nhận tiền (Chuẩn NAPAS 247)",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Surface(
-                            onClick = {
-                                bankSearchQuery = ""
-                                showBankPickerSheet = true
-                            },
-                            shape = RoundedCornerShape(18.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                            border = BorderStroke(1.dp, RoyalBluePrimary.copy(alpha = 0.35f)),
-                            modifier = Modifier
-                                .pressScaleEffect(0.98f)
-                                .fillMaxWidth()
-                                .testTag("bank_selector_field")
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    BankLogoBadge(
-                                        bankShortName = selectedBank.shortName,
-                                        brandColorHex = selectedBank.brandColorHex,
-                                        size = 42.dp
-                                    )
-                                    Column {
-                                        Text(
-                                            text = "${selectedBank.shortName} • BIN ${selectedBank.bin}",
-                                            style = MaterialTheme.typography.titleSmall.copy(
-                                                fontWeight = FontWeight.Bold
-                                            ),
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = selectedBank.fullName,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = "Chọn ngân hàng",
-                                    tint = RoyalBluePrimary
-                                )
-                            }
+                    Surface(
+                        onClick = onNavigateBackHome,
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color.White.copy(alpha = 0.16f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)),
+                        modifier = Modifier
+                            .pressScaleEffect()
+                            .size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                contentDescription = "Quay lại",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                     }
 
-                    // Số tài khoản
-                    OutlinedTextField(
-                        value = accountNumber,
-                        onValueChange = { input ->
-                            accountNumber = input.filter { it.isLetterOrDigit() }.take(25)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("bank_account_number_input"),
-                        label = { Text("Số tài khoản ngân hàng") },
-                        placeholder = { Text("Nhập chính xác số tài khoản nhận tiền") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.CreditCard,
-                                contentDescription = null,
-                                tint = RoyalBluePrimary
-                            )
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            capitalization = KeyboardCapitalization.Characters,
-                            imeAction = ImeAction.Next
+                    Text(
+                        text = "Tài khoản ngân hàng",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold
                         ),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = RoyalBluePrimary
-                        )
+                        color = Color.White
                     )
 
-                    // Tên chủ tài khoản
-                    OutlinedTextField(
-                        value = accountHolder,
-                        onValueChange = { accountHolder = it.take(50) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("bank_account_holder_input"),
-                        label = { Text("Tên chủ tài khoản (Không dấu)") },
-                        placeholder = { Text("VD: NGUYEN VAN AN") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = RoyalBluePrimary
-                            )
-                        },
-                        supportingText = {
-                            Text(
-                                "Chuẩn hóa hiển thị: ${CurrencyUtils.normalizeAccountHolderName(accountHolder).ifBlank { "..." }}"
-                            )
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Characters,
-                            imeAction = ImeAction.Next
-                        ),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = RoyalBluePrimary
-                        )
-                    )
-
-                    // Nội dung chuyển khoản mặc định
-                    OutlinedTextField(
-                        value = defaultMessage,
-                        onValueChange = { defaultMessage = it.take(50) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("bank_default_message_input"),
-                        label = { Text("Nội dung chuyển khoản mặc định") },
-                        placeholder = { Text("VD: THANH TOAN DON HANG") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = null,
-                                tint = RoyalBluePrimary
-                            )
-                        },
-                        supportingText = {
-                            Text(
-                                "Tự động chuẩn hóa ASCII NAPAS: ${CurrencyUtils.sanitizeTransferMessage(defaultMessage).ifBlank { "Không có" }}"
-                            )
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Done
-                        ),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = RoyalBluePrimary
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    GradientPrimaryButton(
-                        text = "LƯU TÀI KHOẢN NGÂN HÀNG",
-                        icon = Icons.Default.Save,
-                        onClick = {
-                            onSaveBankConfig(
-                                selectedBank.bin,
-                                accountNumber,
-                                accountHolder,
-                                defaultMessage
-                            )
-                        },
-                        modifier = Modifier.testTag("save_bank_settings_button")
+                    VietQrVerifiedBadge(
+                        text = "NAPAS 247",
+                        isLightOnBlue = true
                     )
                 }
-            }
 
-            // 3. Cam kết bảo mật
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
-                border = BorderStroke(1.dp, RoyalBluePrimary.copy(alpha = 0.2f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                // 2. Thẻ Ngân hàng trực quan cao cấp
+                BankVirtualFintechCard(
+                    bank = selectedBank,
+                    accountNumber = accountNumber.ifBlank { "CHƯA NHẬP SỐ TK" },
+                    accountHolder = CurrencyUtils.normalizeAccountHolderName(accountHolder).ifBlank { "TEN CHU TAI KHOAN" },
+                    defaultMessage = CurrencyUtils.sanitizeTransferMessage(defaultMessage),
+                    modifier = Modifier.staggeredEntrance(1)
+                )
+
+                // 3. Form Cài đặt tài khoản thụ hưởng
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .staggeredEntrance(2),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = RoyalBluePrimary,
-                        modifier = Modifier.size(26.dp)
-                    )
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            text = "Lưu trữ an toàn trên thiết bị (DataStore)",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.Bold
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AccountBalance,
+                                contentDescription = null,
+                                tint = RoyalBluePrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "Thiết lập tài khoản nhận tiền",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        // Chọn ngân hàng
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                text = "Ngân hàng thụ hưởng",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Surface(
+                                onClick = {
+                                    bankSearchQuery = ""
+                                    showBankPickerSheet = true
+                                },
+                                shape = RoundedCornerShape(18.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                border = BorderStroke(1.dp, RoyalBluePrimary.copy(alpha = 0.35f)),
+                                modifier = Modifier
+                                    .pressScaleEffect(0.98f)
+                                    .fillMaxWidth()
+                                    .testTag("bank_selector_field")
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        BankLogoBadge(
+                                            bankShortName = selectedBank.shortName,
+                                            brandColorHex = selectedBank.brandColorHex,
+                                            size = 42.dp
+                                        )
+                                        Column {
+                                            Text(
+                                                text = "${selectedBank.shortName} • BIN ${selectedBank.bin}",
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = selectedBank.fullName,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Chọn ngân hàng",
+                                        tint = RoyalBluePrimary
+                                    )
+                                }
+                            }
+                        }
+
+                        // Số tài khoản
+                        OutlinedTextField(
+                            value = accountNumber,
+                            onValueChange = { input ->
+                                accountNumber = input.filter { it.isLetterOrDigit() }.take(25)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("bank_account_number_input"),
+                            label = { Text("Số tài khoản ngân hàng") },
+                            placeholder = { Text("Nhập chính xác số tài khoản nhận tiền") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.CreditCard,
+                                    contentDescription = null,
+                                    tint = RoyalBluePrimary
+                                )
+                            },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                capitalization = KeyboardCapitalization.Characters,
+                                imeAction = ImeAction.Next
                             ),
-                            color = MaterialTheme.colorScheme.onSurface
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = RoyalBluePrimary
+                            )
                         )
-                        Text(
-                            text = "Chỉ sử dụng Số tài khoản công khai và Mã BIN ngân hàng để tạo mã nhận tiền VietQR. Tuyệt đối không yêu cầu mật khẩu hay OTP.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                        // Tên chủ tài khoản
+                        OutlinedTextField(
+                            value = accountHolder,
+                            onValueChange = { accountHolder = it.take(50) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("bank_account_holder_input"),
+                            label = { Text("Tên chủ tài khoản (Không dấu)") },
+                            placeholder = { Text("VD: NGUYEN VAN AN") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Person,
+                                    contentDescription = null,
+                                    tint = RoyalBluePrimary
+                                )
+                            },
+                            supportingText = {
+                                Text(
+                                    "Chuẩn hóa hiển thị: ${CurrencyUtils.normalizeAccountHolderName(accountHolder).ifBlank { "..." }}"
+                                )
+                            },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Characters,
+                                imeAction = ImeAction.Next
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = RoyalBluePrimary
+                            )
                         )
+
+                        // Nội dung chuyển khoản mặc định
+                        OutlinedTextField(
+                            value = defaultMessage,
+                            onValueChange = { defaultMessage = it.take(50) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("bank_default_message_input"),
+                            label = { Text("Nội dung chuyển khoản mặc định") },
+                            placeholder = { Text("VD: THANH TOAN DON HANG") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Description,
+                                    contentDescription = null,
+                                    tint = RoyalBluePrimary
+                                )
+                            },
+                            supportingText = {
+                                Text(
+                                    "Tự động chuẩn hóa ASCII NAPAS: ${CurrencyUtils.sanitizeTransferMessage(defaultMessage).ifBlank { "Không có" }}"
+                                )
+                            },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Done
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = RoyalBluePrimary
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        GradientPrimaryButton(
+                            text = "Lưu tài khoản ngân hàng",
+                            icon = Icons.Outlined.Save,
+                            onClick = {
+                                onSaveBankConfig(
+                                    selectedBank.bin,
+                                    accountNumber,
+                                    accountHolder,
+                                    defaultMessage
+                                )
+                            },
+                            modifier = Modifier.testTag("save_bank_settings_button")
+                        )
+                    }
+                }
+
+                // 4. Cam kết bảo mật
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .staggeredEntrance(3)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Lock,
+                            contentDescription = null,
+                            tint = RoyalBluePrimary,
+                            modifier = Modifier.size(26.dp)
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = "Lưu trữ cục bộ an toàn (DataStore)",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Chỉ sử dụng Số tài khoản công khai và Mã BIN ngân hàng để tạo mã nhận tiền VietQR. Tuyệt đối không yêu cầu mật khẩu hay OTP.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
@@ -397,7 +461,7 @@ fun BankSettingsScreen(
                         .testTag("bank_search_input"),
                     placeholder = { Text("Tìm tên ngân hàng hoặc mã BIN (VD: Vietcombank, MB, ACB...)") },
                     leadingIcon = {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                        Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
                     },
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp)
@@ -479,18 +543,20 @@ private fun BankVirtualFintechCard(
     bank: VietnameseBank,
     accountNumber: String,
     accountHolder: String,
-    defaultMessage: String
+    defaultMessage: String,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 10.dp,
+                elevation = 12.dp,
                 shape = RoundedCornerShape(24.dp),
-                ambientColor = RoyalBluePrimary.copy(alpha = 0.3f),
-                spotColor = RoyalBluePrimary.copy(alpha = 0.3f)
+                ambientColor = Color(0xFF04143A).copy(alpha = 0.45f),
+                spotColor = Color(0xFF04143A).copy(alpha = 0.45f)
             ),
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(24.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f))
     ) {
         Box(
             modifier = Modifier
@@ -498,9 +564,9 @@ private fun BankVirtualFintechCard(
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            RoyalBlueDark,
-                            RoyalBluePrimary,
-                            SecondaryBlue
+                            Color(0xFF062360),
+                            Color(0xFF0C3B9E),
+                            Color(0xFF1769FF)
                         )
                     )
                 )
@@ -518,11 +584,11 @@ private fun BankVirtualFintechCard(
                         radius = size.width * 0.5f
                     )
                 }
-                .padding(22.dp)
+                .padding(20.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -536,12 +602,12 @@ private fun BankVirtualFintechCard(
                         BankLogoBadge(
                             bankShortName = bank.shortName,
                             brandColorHex = bank.brandColorHex,
-                            size = 40.dp,
+                            size = 42.dp,
                             lightBackground = true
                         )
                         Column {
                             Text(
-                                text = bank.shortName.uppercase(),
+                                text = bank.shortName,
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.ExtraBold
                                 ),
@@ -561,7 +627,7 @@ private fun BankVirtualFintechCard(
                     )
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         text = "SỐ TÀI KHOẢN THỤ HƯỞNG",
                         style = MaterialTheme.typography.labelSmall.copy(
@@ -571,7 +637,7 @@ private fun BankVirtualFintechCard(
                     )
                     Text(
                         text = accountNumber,
-                        style = MaterialTheme.typography.headlineMedium.copy(
+                        style = MaterialTheme.typography.headlineSmall.copy(
                             fontFamily = JetBrainsMonoFontFamily,
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 1.sp
@@ -593,7 +659,7 @@ private fun BankVirtualFintechCard(
                         )
                         Text(
                             text = accountHolder,
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold
                             ),
                             color = Color.White

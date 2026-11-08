@@ -1,6 +1,6 @@
 {
-  "name": "Smart QR Payment",
-  "description": "Ứng dụng tạo mã VietQR chuyển khoản ngân hàng nhanh chóng với số tiền chính xác, hoạt động độc lập và offline.",
+  "name": "PHATPAY",
+  "description": "PHATPAY – Tạo QR nhanh, Thu tiền dễ dàng. Ứng dụng tạo mã VietQR chuyển khoản ngân hàng chuẩn NAPAS 247 phong cách Futuristic Neon Blue.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

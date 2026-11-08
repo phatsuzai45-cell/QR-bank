@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Smart QR Payment</string>
+    <string name="app_name">PHATPAY</string>
     <string name="nav_home">Tạo QR</string>
     <string name="nav_history">Lịch sử</string>
     <string name="nav_bank">Ngân hàng</string>

@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Smart QR Payment"
+rootProject.name = "PHATPAY"
 
 include(":app")

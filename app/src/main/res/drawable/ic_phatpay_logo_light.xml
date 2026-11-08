@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Orbital Electric Blue Ring -->
+    <path
+        android:pathData="M18,68 C10,52 28,30 58,24 C84,19 98,28 92,44"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="16"
+                android:startY="68"
+                android:endX="94"
+                android:endY="28"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#001769FF" />
+                <item android:offset="0.5" android:color="#FF00B4D8" />
+                <item android:offset="1.0" android:color="#FF0A3D91" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Golden Crown perched above the P -->
+    <path
+        android:pathData="M33,31 L30,20 L39,25 L45,16 L51,25 L60,20 L57,31 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="30"
+                android:startY="16"
+                android:endX="58"
+                android:endY="31"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFD54F" />
+                <item android:offset="0.5" android:color="#FFFFB300" />
+                <item android:offset="1.0" android:color="#FFF57C00" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Stylized Futuristic Italic 'P' Silhouette (Royal & Electric Blue for Light Mode) -->
+    <path
+        android:fillType="evenOdd"
+        android:pathData="M36,34 L64,34 C76,34 83,41 81,52 C79,63 70,69 56,69 L45,69 L40,89 L25,89 L36,34 Z M48,46 L46,57 L56,57 C62,57 66,54 67,51 C68,48 65,46 59,46 L48,46 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="36"
+                android:startY="34"
+                android:endX="65"
+                android:endY="89"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF072A78" />
+                <item android:offset="0.55" android:color="#FF1769FF" />
+                <item android:offset="1.0" android:color="#FF00B4D8" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- QR Code Matrix Emblem Integrated at Bottom-Right of P -->
+    <path
+        android:fillColor="#FF072A78"
+        android:fillType="evenOdd"
+        android:pathData="M53,73 h8 v8 h-8 z M55,75 v4 h4 v-4 z" />
+    <path
+        android:fillColor="#FF1769FF"
+        android:fillType="evenOdd"
+        android:pathData="M67,73 h8 v8 h-8 z M69,75 v4 h4 v-4 z" />
+    <path
+        android:fillColor="#FF1769FF"
+        android:fillType="evenOdd"
+        android:pathData="M53,83 h8 v8 h-8 z M55,85 v4 h4 v-4 z" />
+    <path
+        android:fillColor="#FF072A78"
+        android:pathData="M63,73 h2.5 v2.5 h-2.5 z M63,77.5 h2.5 v3.5 h-2.5 z M63,83 h3 v3 h-3 z M68,83 h3 v3 h-3 z M72,83 h3 v3 h-3 z M67,87.5 h4 v3.5 h-4 z M72.5,87.5 h2.5 v3.5 h-2.5 z" />
+</vector>
